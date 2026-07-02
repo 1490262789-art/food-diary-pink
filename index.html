@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>饮食日记</title>
+<style>
+:root{
+  --bg:#0f0f0f;
+  --card:#1a1a1a;
+  --border:#2a2a2a;
+  --text:#e0e0e0;
+  --dim:#888;
+  --accent:#f472b6;
+  --danger:#e05555;
+  --green:#4caf84;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font:16px -apple-system,'PingFang SC','Microsoft YaHei',sans-serif;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body{padding:20px 16px 60px;max-width:520px;margin:0 auto;min-height:100vh}
+
+h1{font-size:22px;font-weight:600;margin:0 0 6px;letter-spacing:.5px}
+.sub{font-size:13px;color:var(--dim);margin-bottom:24px;display:flex;align-items:center;gap:8px}
+.sub .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+.card{background:var(--card);border-radius:12px;padding:18px 16px;margin-bottom:14px;border:1px solid var(--border)}
+.card-title{font-size:13px;color:var(--dim);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+.row{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+.row:last-child{margin-bottom:0}
+.row label{font-size:14px;color:var(--dim);min-width:40px;flex-shrink:0}
+.row input,.row select,.row textarea{flex:1;border:none;background:transparent;color:var(--text);font-size:16px;padding:10px 0;outline:none;border-bottom:1px solid var(--border);transition:border .2s;-webkit-appearance:none;appearance:none;border-radius:0}
+.row input:focus,.row select:focus{border-bottom-color:var(--accent)}
+.row input::placeholder,.row select::placeholder{color:#555}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+
+.upload-zone{display:block;border:2px dashed var(--border);border-radius:10px;padding:16px;text-align:center;color:var(--dim);font-size:14px;cursor:pointer;transition:all .2s;margin-top:8px}
+.upload-zone:active{border-color:var(--accent);color:var(--accent)}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:0}
+.thumbs .wrap{position:relative;display:inline-block;border-radius:8px;overflow:hidden}
+.thumbs img{width:56px;height:56px;object-fit:cover;display:block;border-radius:8px}
+.thumbs .del{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;border:none;font-size:12px;line-height:20px;text-align:center;cursor:pointer;backdrop-filter:blur(4px)}
+
+.btn{display:block;width:100%;background:var(--accent);color:#0f0f0f;border:none;padding:14px;font-size:16px;font-weight:600;border-radius:10px;cursor:pointer;margin-top:12px;transition:opacity .2s}
+.btn:active{opacity:.8}
+.btn:disabled{opacity:.5}
+
+.section{margin-top:28px}
+.bar{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.bar input[type=date]{background:var(--card);border:1px solid var(--border);color:var(--text);padding:8px 10px;font-size:14px;border-radius:8px;outline:none;-webkit-appearance:none}
+.bar a{font-size:13px;color:var(--accent);text-decoration:none;cursor:pointer;padding:6px 12px;background:var(--card);border-radius:6px}
+.bar a:active{opacity:.7}
+.bar .count{font-size:13px;color:var(--dim);margin-left:auto}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 8px;border-bottom:1px solid var(--border);color:var(--dim);font-weight:500;white-space:nowrap;position:sticky;top:0;background:var(--bg)}
+td{padding:10px 8px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+td:first-child{white-space:nowrap;color:var(--dim)}
+td .time{font-size:11px;color:#555}
+.tag{display:inline-block;border:1px solid var(--border);padding:2px 8px;border-radius:10px;font-size:11px;color:var(--dim);white-space:nowrap}
+.thumb-sm{width:36px;height:36px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid var(--border)}
+.del-btn{background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px}
+.del-btn:active{background:var(--border)}
+
+.empty{text-align:center;padding:50px 20px;color:var(--dim)}
+.empty .icon{font-size:40px;margin-bottom:12px;opacity:.4}
+
+/* Modal */
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.95);z-index:999;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(8px)}
+.modal img{max-width:95%;max-height:90%;border-radius:8px}
+/* Toast */
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 24px;font-size:14px;z-index:998;border-radius:20px;opacity:0;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(8px)}
+.toast.on{opacity:1}
+
+.spin{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes s{to{transform:rotate(360deg)}}
+
+.hidden{display:none!important}
+
+@media(max-width:420px){
+  .grid2{grid-template-columns:1fr}
+  body{padding:16px 12px 60px}
+}
+</style>
+</head>
+<body>
+
+<h1>饮食日记</h1>
+<div class="sub"><span class="dot"></span>记录每天的饮食，分享给 ta</div>
+
+<!-- 表单卡片 -->
+<div class="card">
+  <div class="card-title">📝 新记录</div>
+  <div class="row"><label>名字</label><input id="uname" placeholder="你的名字" maxlength="10" autocomplete="off"></div>
+  <div class="row"><label>日期</label><input type="date" id="udate"></div>
+  <div class="grid2">
+    <div class="row"><label>早餐</label><input id="brk" placeholder="吃了什么" autocomplete="off"></div>
+    <div class="row"><label>午餐</label><input id="lun" placeholder="吃了什么" autocomplete="off"></div>
+    <div class="row"><label>晚餐</label><input id="din" placeholder="吃了什么" autocomplete="off"></div>
+    <div class="row"><label>加餐</label><input id="snk" placeholder="零食/饮品" autocomplete="off"></div>
+  </div>
+  <div class="grid2">
+    <div class="row"><label>饮水</label><input id="wtr" placeholder="1500ml" autocomplete="off"></div>
+    <div class="row"><label>标签</label><select id="utag"><option value="">-</option><option>家常菜</option><option>外卖</option><option>甜品</option><option>重油重辣</option><option>清淡减脂</option><option>其他</option></select></div>
+  </div>
+  <div class="row"><label>备注</label><input id="rmk" placeholder="想说的话" autocomplete="off"></div>
+  <div class="upload-zone" id="upl">📷 拍照 / 选择照片</div>
+  <input type="file" id="pics" accept="image/*" capture="environment" multiple class="hidden">
+  <div class="thumbs" id="pv"></div>
+  <button class="btn" id="sb">保存</button>
+</div>
+
+<!-- 记录区 -->
+<div class="section">
+  <div class="bar">
+    <input type="date" id="filt" placeholder="筛选日期">
+    <a id="clr">清除</a>
+    <a id="exp">导出 CSV</a>
+    <span class="count" id="rc"></span>
+  </div>
+  <div id="ld" style="text-align:center;padding:40px;color:var(--dim)"><span class="spin"></span>加载中</div>
+  <noscript><p class="empty"><span class="icon">⚠️</span><br>请启用 JavaScript</p></noscript>
+  <div style="overflow-x:auto;-webkit-overflow-scrolling:touch" id="tw" class="hidden">
+    <table><thead><tr><th>日期</th><th>名字</th><th>照片</th><th>早</th><th>午</th><th>晚</th><th>加</th><th>水</th><th>标签</th><th>备注</th><th></th></tr></thead><tbody id="tb"></tbody></table>
+  </div>
+  <div class="empty hidden" id="em"><span class="icon">🍽️</span><br>还没有记录，来写第一条吧</div>
+</div>
+
+<div class="toast" id="ts"></div>
+<div class="modal hidden" id="md" onclick="this.classList.add('hidden')"><img id="mi"></div>
+
+<script>
+// Config
+var K='$2a$10$LaFzu8ik4tTzNy35YLBF1OcoTogoIbWJUQ4/SpkQ.0M3UUhjGeyRO';
+var B='6a453823f5f4af5e294e5db2';
+var A='https://api.jsonbin.io/v3/b/'+B;
+var H={'X-Master-Key':K,'Content-Type':'application/json'};
+
+var R=[],F='',P=[],$=function(id){return document.getElementById(id)};
+
+// Init
+$('udate').valueAsDate=new Date();
+var sn=localStorage.getItem('fd_name')||'';
+$('uname').value=sn;
+$('uname').oninput=function(){localStorage.setItem('fd_name',$('uname').value.trim())};
+
+// Events
+$('upl').onclick=function(){$('pics').click()};
+$('pics').onchange=hpic;
+$('sb').onclick=save;
+$('filt').onchange=function(){F=$('filt').value;render()};
+$('clr').onclick=function(){$('filt').value='';F='';render()};
+$('exp').onclick=expCSV;
+
+load();
+
+// Toast
+var _tt;
+function toast(m){
+  var t=$('ts');t.textContent=m;t.classList.add('on');
+  clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove('on')},2000);
+}
+
+// Photos
+function hpic(e){
+  var fs=Array.from(e.target.files);if(!fs.length)return;
+  if(P.length+fs.length>5){toast('最多 5 张');e.target.value='';return}
+  var done=0;
+  fs.forEach(function(f){
+    var r=new FileReader();
+    r.onload=function(ev){
+      var im=new Image();
+      im.onload=function(){
+        var c=document.createElement('canvas'),mx=600,w=im.width,h=im.height;
+        if(w>mx||h>mx){var ratio=mx/Math.max(w,h);w=Math.round(w*ratio);h=Math.round(h*ratio)}
+        c.width=w;c.height=h;
+        c.getContext('2d').drawImage(im,0,0,w,h);
+        P.push(c.toDataURL('image/jpeg',.65));
+        done++;if(done===fs.length){showP();toast('已压缩 '+(fs.length>1?fs.length+' 张':'')+')')}
+      };
+      im.src=ev.target.result;
+    };
+    r.readAsDataURL(f);
+  });
+  e.target.value='';
+}
+function showP(){
+  $('pv').innerHTML=P.map(function(p,i){
+    return'<span class="wrap"><img src="'+p+'" onclick="event.stopPropagation();big(\''+p+'\')"><button class="del" onclick="event.stopPropagation();delp('+i+')">×</button></span>'
+  }).join('');
+}
+function delp(i){P.splice(i,1);showP()}
+function big(s){$('mi').src=s;$('md').classList.remove('hidden')}
+
+// Data
+function load(){
+  $('ld').classList.remove('hidden');$('tw').classList.add('hidden');$('em').classList.add('hidden');
+  fetch(A+'/latest',{headers:H}).then(function(r){
+    if(!r.ok)throw Error();return r.json();
+  }).then(function(j){
+    var d=j.record;
+    if(Array.isArray(d))R=d;
+    else if(d&&d.records)R=d.records;
+    else R=[];
+    render();
+  }).catch(function(){R=[];render()});
+}
+
+function save(){
+  var n=$('uname').value.trim();if(!n){toast('请输入名字');return}
+  var o={
+    id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    date:$('udate').value,name:n,
+    breakfast:$('brk').value.trim(),lunch:$('lun').value.trim(),
+    dinner:$('din').value.trim(),snacks:$('snk').value.trim(),
+    water:$('wtr').value.trim(),tag:$('utag').value,
+    mood:$('rmk').value.trim(),photos:P.slice(),
+    time:new Date().toISOString()
+  };
+  if(!o.date){toast('请选择日期');return}
+  if(!o.breakfast&&!o.lunch&&!o.dinner&&!o.snacks&&!o.photos.length){toast('至少填一项');return}
+  $('sb').disabled=true;$('sb').textContent='保存中...';
+
+  fetch(A+'/latest',{headers:H}).then(function(r){return r.json()}).then(function(j){
+    var d=j.record;
+    if(Array.isArray(d))d={records:d};
+    if(!d||!d.records)d={records:[]};
+    d.records.push(o);
+    return fetch(A,{method:'PUT',headers:H,body:JSON.stringify(d)});
+  }).then(function(r){
+    if(!r.ok)throw Error();
+    R.push(o);
+    ['brk','lun','din','snk','wtr','rmk'].forEach(function(id){$(id).value=''});
+    $('utag').value='';P=[];$('pv').innerHTML='';
+    render();toast('✓ 已保存');
+  }).catch(function(){
+    fetch(A,{method:'PUT',headers:H,body:JSON.stringify({records:R.concat([o])})}).then(function(r){
+      if(r.ok){R.push(o);['brk','lun','din','snk','wtr','rmk'].forEach(function(id){$(id).value=''});$('utag').value='';P=[];$('pv').innerHTML='';render();toast('✓ 已保存')}
+      else toast('保存失败')
+    }).catch(function(){toast('网络错误，请重试')});
+  }).finally(function(){$('sb').disabled=false;$('sb').textContent='保存'});
+}
+
+function render(){
+  $('ld').classList.add('hidden');
+  var rs=R.slice();
+  if(F)rs=rs.filter(function(r){return r.date===F});
+  rs.sort(function(a,b){
+    if(b.date!==a.date)return b.date.localeCompare(a.date);
+    return(b.time||'').localeCompare(a.time||'');
+  });
+  $('rc').textContent=rs.length+' 条';
+  if(!rs.length){$('tw').classList.add('hidden');$('em').classList.remove('hidden');return}
+  $('em').classList.add('hidden');$('tw').classList.remove('hidden');
+  var cn=$('uname').value.trim();
+  $('tb').innerHTML=rs.map(function(r){
+    var me=r.name===cn;
+    var ph=r.photos&&r.photos.length?r.photos.map(function(p){return'<img class="thumb-sm" src="'+es(p)+'" onclick="event.stopPropagation();big(\''+es(p)+'\')">'}).join(''):'—';
+    var tg=r.tag?'<span class="tag">'+es(r.tag)+'</span>':'';
+    var tm=r.time?'<span class="time">'+new Date(r.time).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})+'</span>':'';
+    return'<tr><td>'+r.date+'<br>'+tm+'</td><td>'+es(r.name)+'</td><td>'+ph+'</td><td>'+es(r.breakfast||'—')+'</td><td>'+es(r.lunch||'—')+'</td><td>'+es(r.dinner||'—')+'</td><td>'+es(r.snacks||'—')+'</td><td>'+es(r.water||'—')+'</td><td>'+tg+'</td><td style="max-width:80px;font-size:12px">'+es(r.mood||'—')+'</td><td>'+(me?'<button class="del-btn" onclick="del(\''+r.id+'\')">×</button>':'')+'</td></tr>';
+  }).join('');
+}
+
+function del(id){
+  if(!confirm('删除这条记录？'))return;
+  fetch(A+'/latest',{headers:H}).then(function(r){return r.json()}).then(function(j){
+    var d=j.record;
+    if(Array.isArray(d))d={records:d};
+    d.records=(d.records||[]).filter(function(x){return x.id!==id});
+    return fetch(A,{method:'PUT',headers:H,body:JSON.stringify(d)});
+  }).then(function(r){
+    if(!r.ok)throw Error();
+    R=R.filter(function(x){return x.id!==id});render();toast('已删除');
+  }).catch(function(){toast('删除失败')});
+}
+
+function expCSV(){
+  var hd=['日期','名字','早餐','午餐','晚餐','加餐','饮水','标签','备注','照片数量','时间'];
+  var rs=[hd];
+  R.sort(function(a,b){return(b.time||'').localeCompare(a.time||'')});
+  R.forEach(function(r){
+    rs.push([r.date,r.name,r.breakfast||'',r.lunch||'',r.dinner||'',r.snacks||'',r.water||'',r.tag||'',r.mood||'',(r.photos?r.photos.length:0)+'张',r.time?new Date(r.time).toLocaleString('zh-CN'):'']);
+  });
+  var csv=rs.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"'}).join(',')}).join('\n');
+  var b=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  var u=URL.createObjectURL(b);
+  var a=document.createElement('a');a.href=u;a.download='饮食记录.csv';document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(u);
+}
+
+function es(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+</script>
+</body>
+</html>
